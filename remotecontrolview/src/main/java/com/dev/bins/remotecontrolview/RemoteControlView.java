@@ -157,6 +157,7 @@ public class RemoteControlView extends View {
                 break;
             case MotionEvent.ACTION_UP:
                 pos = getTouchPos(x, y);
+                pos = -1;
                 break;
         }
         invalidate();
