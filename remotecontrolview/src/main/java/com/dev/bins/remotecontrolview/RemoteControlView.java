@@ -17,27 +17,30 @@ import android.view.View;
 
 public class RemoteControlView extends View {
 
+    private final int center = 0;
+    private final int up = 1;
+    private final int right = 2;
+    private final int down = 3;
+    private final int left = 4;
+    private int pos = -1;
     private Paint mNormalPaint;
     private Paint mSelectPaint;
     private int width;
+    private Path centerPath;
     private Path upPath;
     private Path rightPath;
     private Path downPath;
     private Path leftPath;
-
+    private Region centerRegion;
     private Region upRegion;
     private Region rightRegion;
     private Region downRegion;
     private Region leftRegion;
-
     private Region global;
     private RectF smallCircle;
     private RectF bigCircle;
     private int bigSweepAngle = 84;
     private int smallSweepAngle = -80;
-
-
-    private int up;
 
     public RemoteControlView(Context context) {
         this(context, null);
@@ -69,6 +72,11 @@ public class RemoteControlView extends View {
         super.onSizeChanged(w, h, oldw, oldh);
         width = Math.min(w, h);
         global = new Region(0, 0, w, h);
+
+        centerPath = new Path();
+        centerRegion = new Region();
+        centerPath.addCircle(width / 2, width / 2, width * 0.5f / 2, Path.Direction.CW);
+        centerRegion.setPath(centerPath, global);
 
         upPath = new Path();
         rightPath = new Path();
@@ -114,6 +122,25 @@ public class RemoteControlView extends View {
         canvas.drawPath(downPath, mNormalPaint);
         canvas.drawPath(leftPath, mNormalPaint);
         canvas.drawCircle(width / 2, width / 2, width * 0.2f, mNormalPaint);
+        switch (pos) {
+            case center:
+                canvas.drawCircle(width / 2, width / 2, width * 0.2f, mSelectPaint);
+                break;
+            case up:
+                canvas.drawPath(upPath, mSelectPaint);
+                break;
+            case right:
+                canvas.drawPath(rightPath, mSelectPaint);
+                break;
+            case down:
+                canvas.drawPath(downPath, mSelectPaint);
+                break;
+            case left:
+                canvas.drawPath(leftPath, mSelectPaint);
+                break;
+            default:
+                break;
+        }
 
     }
 
@@ -123,27 +150,43 @@ public class RemoteControlView extends View {
         int y = (int) event.getY();
         switch (event.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
-                getTouchPos(x,y);
+                pos = getTouchPos(x, y);
                 break;
             case MotionEvent.ACTION_MOVE:
+                pos = getTouchPos(x, y);
                 break;
             case MotionEvent.ACTION_UP:
+                pos = getTouchPos(x, y);
                 break;
         }
-
+        invalidate();
         return true;
     }
 
-    private void getTouchPos(int x, int y) {
-        if (upRegion.contains(x, y)) {
-
+    private int getTouchPos(int x, int y) {
+        if (centerRegion.contains(x, y)) {
+            return center;
+        } else if (upRegion.contains(x, y)) {
+            return up;
         } else if (rightRegion.contains(x, y)) {
-
+            return right;
         } else if (downRegion.contains(x, y)) {
-
+            return down;
         } else if (leftRegion.contains(x, y)) {
-
+            return left;
         }
+        return -1;
+    }
 
+    interface OnClickListener {
+        void onCenterClick();
+
+        void onUpClick();
+
+        void onRightClick();
+
+        void onDownClick();
+
+        void onLeftClick();
     }
 }
